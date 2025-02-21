@@ -22,7 +22,7 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
 
     IAuthenticationRepository authenticationRepository;
 
-    public AuthenticationService(IAuthenticationRepository authenticationRepository, AuthenticationManager authenticationManager){
+    public AuthenticationService(IAuthenticationRepository authenticationRepository){
         this.authenticationRepository = authenticationRepository;
     }
 
