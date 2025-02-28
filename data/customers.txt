@@ -1,1 +1,2 @@
 john, $2a$10$Dp/q7vMQob17swAoPSIVzOiMkPbPP92vL8oXN.3dxcKIk85o3soZ2
+new, $2a$10$ryPcIPvPkGrj2S9V7QfM2efO2QTjgX6nfQUoZy8rwL4hBhjAsLWt6

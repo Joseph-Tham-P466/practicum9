@@ -1,7 +1,7 @@
 package edu.iu.p466.prime_service.service;
 
 import edu.iu.p466.prime_service.model.Customer;
-import edu.iu.p466.prime_service.repository.IAuthenticationRepository;
+import edu.iu.p466.prime_service.repository.AuthenticationDBRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,10 +20,23 @@ import java.io.IOException;
 @Service
 public class AuthenticationService implements IAuthenticationService, UserDetailsService {
 
-    IAuthenticationRepository authenticationRepository;
+    AuthenticationDBRepository authenticationRepository;
 
-    public AuthenticationService(IAuthenticationRepository authenticationRepository){
+    public AuthenticationService(AuthenticationDBRepository authenticationRepository){
         this.authenticationRepository = authenticationRepository;
+    }
+
+    @Override
+    public Customer register(Customer customer) throws IOException{
+        BCryptPasswordEncoder bc = new BCryptPasswordEncoder();
+        String passwordEncoded = bc.encode(customer.getPassword());
+        customer.setPassword(passwordEncoded);
+        return authenticationRepository.save(customer);
+    }
+
+    @Override
+    public boolean login(String username, String password) throws IOException {
+        return false;
     }
 
     @Override
@@ -38,22 +51,9 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
                     .withUsername(username)
                     .password(customer.getPassword())
                     .build();
-        } catch (IOException e){
+        } catch (Exception e){
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public boolean register(Customer customer) throws IOException{
-        BCryptPasswordEncoder bc = new BCryptPasswordEncoder();
-        String passwordEncoded = bc.encode(customer.getPassword());
-        customer.setPassword(passwordEncoded);
-        return authenticationRepository.save(customer);
-    }
-
-    @Override
-    public boolean login(String username, String password) throws IOException {
-        return false;
     }
 
     @RestController
@@ -70,7 +70,7 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
             this.tokenService = tokenService;
         }
         @PostMapping("/register")
-        public boolean register(@RequestBody Customer customer){
+        public Customer register(@RequestBody Customer customer){
             try{
                 return authenticationService.register(customer);
             } catch (IOException e){
