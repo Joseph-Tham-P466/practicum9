@@ -1,0 +1,27 @@
+services:
+  prime-service:
+    image: primes-service
+    build:
+      context: ../prime-service
+      dockerfile: Dockerfile
+    container_name: prime-service
+    ports:
+      - "4001:8080"
+    environment:
+      - server.port=8080
+      - spring.datasource.url=jdbc:postgresql://primes-database:5432/primes
+      - spring.datasource.username=postgres
+      - spring.datasource.password=password
+    restart: "no"
+    depends_on:
+      - prime-service-database-postgres
+
+  prime-service-database-postgres:
+    image: postgres:alpine
+    container_name: primes-database
+    ports:
+      - "5001:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: primes
