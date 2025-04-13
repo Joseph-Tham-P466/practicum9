@@ -1,20 +1,21 @@
 name: Test, Create Image, Publish to Azure
+
 on:
-  push
+  push:
 
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+
     services:
       postgres_db:
         image: postgres
         env:
-          POSTGRES_USER: admin2025
-          POSTGRES_PASSWORD: p4662025!
+          POSTGRES_USER: admin2024
+          POSTGRES_PASSWORD: p4662024!
           POSTGRES_DB: primes
         ports:
           - 5001:5432
-
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     env:
@@ -23,9 +24,9 @@ jobs:
       CONTAINER_REGISTRY_UN: ${{ secrets.CONTAINER_REGISTRY_UN }}
       CONTAINER_REGISTRY_PW: ${{ secrets.CONTAINER_REGISTRY_PW }}
       ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-      DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-      DATASOURCE_UN: ${{ secrets.SPRING_DATASOURCE_UN }}
-      DATASOURCE_PW: ${{ secrets.SPRING_DATASOURCE_PW }}
+      DATASOURCE_URL: ${{ secrets.DATASOURCE_URL }}
+      DATASOURCE_UN: ${{ secrets.DATASOURCE_UN }}
+      DATASOURCE_PW: ${{ secrets.DATASOURCE_PW }}
 
     steps:
       - name: Checkout
@@ -43,11 +44,10 @@ jobs:
       - name: Run the unit tests
         run: |
           ./mvnw --batch-mode -Dmaven.test.failure.ignore=true test
-
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5001/primes
-          SPRING_DATASOURCE_USERNAME: admin2025
-          SPRING_DATASOURCE_PASSWORD: p4662025!
+          SPRING_DATASOURCE_USERNAME: admin2024
+          SPRING_DATASOURCE_PASSWORD: p4662024!
 
       - name: Report the result of the unit tests
         uses: dorny/test-reporter@v1
@@ -58,7 +58,7 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-      - name: Build the Docker image
+      - name: Build the docker image
         run: ./scripts/build-image.sh
 
       - name: Publish to Github container registry
@@ -67,9 +67,10 @@ jobs:
       - name: Publish to Azure container registry
         run: ./scripts/push-to-acr.sh
 
-      - uses: tale/kubectl-action@v1
+      - name: Set up kubectl
+        uses: tale/kubectl-action@v1
         with:
-          base64-kubeconfig: ${{ secrets.KUBECONFIG }}
+          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
 
       - name: Deploy
         run: ./scripts/deploy.sh
