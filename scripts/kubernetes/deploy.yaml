@@ -14,7 +14,7 @@ spec:
       spec:
         containers:
         - name: prime-service
-          image: $CONTAINER_REGISTRY/prime-service:$VERSION
+          image: $AZURE_CONTAINER_REGISTRY/prime-service:$VERSION
           imagePullPolicy: Always
           envFrom:
             - secretRef:
