@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kinds: Deployment
+kind: Deployment
 metadata:
   name: prime-service
 spec:
@@ -27,7 +27,7 @@ spec:
               memory: "512Mi"
               cpu: "500m"
 
-
+---
 
 apiVersion: v1
 kind: Service
@@ -42,13 +42,13 @@ spec:
       port: 80
       targetPort: 8085
 
-
-
+---
 
 apiVersion: v1
 kind: Secret
 metadata:
   name: prime-service-secrets
+type: Opaque
 stringData:
   DATASOURCE_PASSWORD: $DATASOURCE_PW
   DATASOURCE_USERNAME: $DATASOURCE_UN
