@@ -8,27 +8,25 @@ spec:
     matchLabels:
       app: prime-service
   template:
-    metadata:
-      labels:
-        app: prime-service
-    spec:
-      containers:
+      metadata:
+          labels:
+            app: prime-service
+      spec:
+        containers:
         - name: prime-service
           image: $CONTAINER_REGISTRY/prime-service:$VERSION
           imagePullPolicy: Always
           envFrom:
             - secretRef:
-                name: prime-service-secrets
+                name: postgres-primes-secrets
           resources:
-            requests:
-              memory: "256Mi"
-              cpu: "200m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-
+                  requests:
+                    memory: "256Mi"
+                    cpu: "200m"
+                  limits:
+                    memory: "512Mi"
+                    cpu: "500m"
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -40,15 +38,12 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8085
-
+      targetPort: 8080
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
-  name: prime-service-secrets
-type: Opaque
+  name: postgres-primes-secrets
 stringData:
   DATASOURCE_PASSWORD: $DATASOURCE_PW
   DATASOURCE_USERNAME: $DATASOURCE_UN

@@ -1,10 +1,32 @@
-name: Docker Image CI for GHCR
+name: Test, Create Image, Publish to Azure
 on:
   push
 
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+    services:
+      postgres_db:
+        image: postgres
+        env:
+          POSTGRES_USER: admin2025
+          POSTGRES_PASSWORD: p4662025!
+          POSTGRES_DB: primes
+        ports:
+          - 5001:5432
+
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    env:
+      VERSION: ${{ secrets.SERVICE_VERSION }}
+      CONTAINER_REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+      CONTAINER_REGISTRY_UN: ${{ secrets.CONTAINER_REGISTRY_UN }}
+      CONTAINER_REGISTRY_PW: ${{ secrets.CONTAINER_REGISTRY_PW }}
+      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+      DATASOURCE_UN: ${{ secrets.SPRING_DATASOURCE_UN }}
+      DATASOURCE_PW: ${{ secrets.SPRING_DATASOURCE_PW }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v1
@@ -16,12 +38,18 @@ jobs:
           distribution: 'adopt'
 
       - name: Build the package
-        run: mvn --batch-mode -DskipTests package
+        run: ./mvnw --batch-mode -DskipTests clean package
 
       - name: Run the unit tests
-        run: mvn --batch-mode -Dmaven.test.failure.ignore=true test
+        run: |
+          ./mvnw --batch-mode -Dmaven.test.failure.ignore=true test
 
-      - name: Report
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5001/primes
+          SPRING_DATASOURCE_USERNAME: admin2025
+          SPRING_DATASOURCE_PASSWORD: p4662025!
+
+      - name: Report the result of the unit tests
         uses: dorny/test-reporter@v1
         if: always()
         with:
@@ -30,8 +58,18 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-      - name: Build and push the image
-        run: |
-          docker login --username josephtham --password ${{secrets.ACCESS_TOKEN}} ghcr.io
-          docker build -t ghcr.io/josephtham/prime-service:latest --file Dockerfile .  
-          docker push ghcr.io/josephtham/prime-service:latest
+      - name: Build the Docker image
+        run: ./scripts/build-image.sh
+
+      - name: Publish to Github container registry
+        run: ./scripts/push-to-ghcr.sh
+
+      - name: Publish to Azure container registry
+        run: ./scripts/push-to-acr.sh
+
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Deploy
+        run: ./scripts/deploy.sh
