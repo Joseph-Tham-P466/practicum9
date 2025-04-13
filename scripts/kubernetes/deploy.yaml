@@ -12,6 +12,8 @@ spec:
           labels:
             app: prime-service
       spec:
+        imagePullSecrets:
+        - name: acr-auth
         containers:
         - name: prime-service
           image: $CONTAINER_REGISTRY/prime-service:$VERSION
